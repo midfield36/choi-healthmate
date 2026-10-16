@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
-import { Home, Sparkles, ClipboardEdit, TrendingUp, MapPin, Smartphone, FileCode2, Dumbbell, ShieldCheck } from 'lucide-react';
+import { Home, Sparkles, ClipboardEdit, TrendingUp, MapPin, Smartphone, FileCode2, Dumbbell, ShieldCheck, Users } from 'lucide-react';
 import { HomeTab } from './components/HomeTab';
 import { AICoachTab } from './components/AICoachTab';
 import { WorkoutLogTab } from './components/WorkoutLogTab';
 import { BodyRecordTab } from './components/BodyRecordTab';
 import { GymSearchTab } from './components/GymSearchTab';
+import { CommunityTab } from './components/CommunityTab';
 import { TechSpecViewer } from './components/TechSpecViewer';
-import { WorkoutLogItem, WorkoutRoutineResponse, LoggedExercise, BodyRecord } from './types/healthmate';
+import { WorkoutLogItem, WorkoutRoutineResponse, LoggedExercise, BodyRecord, RoutineFeedback } from './types/healthmate';
 
 export default function App() {
   const [viewMode, setViewMode] = useState<'mobile' | 'techSpec'>('mobile');
-  const [activeTab, setActiveTab] = useState<'home' | 'aiCoach' | 'workoutLog' | 'bodyRecord' | 'gymSearch'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'aiCoach' | 'workoutLog' | 'bodyRecord' | 'community' | 'gymSearch'>('home');
 
   // User Profile state (persisted in localStorage)
   const [userName, setUserName] = useState<string>(() => {
@@ -45,6 +46,13 @@ export default function App() {
     } catch (e) {
       console.warn(e);
     }
+  };
+
+  // Routine feedback state (for AI coaching adaptation loop)
+  const [lastFeedback, setLastFeedback] = useState<RoutineFeedback | null>(null);
+
+  const handleSaveFeedback = (feedback: RoutineFeedback) => {
+    setLastFeedback(feedback);
   };
 
   // Initial mock workout data for immediate rich experience
@@ -259,7 +267,11 @@ export default function App() {
               )}
 
               {activeTab === 'aiCoach' && (
-                <AICoachTab onApplyRoutineToLog={handleApplyRoutineToLog} />
+                <AICoachTab
+                  onApplyRoutineToLog={handleApplyRoutineToLog}
+                  lastFeedback={lastFeedback}
+                  onSaveFeedback={handleSaveFeedback}
+                />
               )}
 
               {activeTab === 'workoutLog' && (
@@ -274,65 +286,80 @@ export default function App() {
                 <BodyRecordTab records={bodyRecords} onAddRecord={handleAddBodyRecord} />
               )}
 
+              {activeTab === 'community' && (
+                <CommunityTab userName={userName} userLevel={userLevel} />
+              )}
+
               {activeTab === 'gymSearch' && <GymSearchTab />}
             </div>
 
-            {/* 5 Bottom Navigation Tabs as strictly specified in the project brief */}
-            <nav className="absolute bottom-0 left-0 right-0 bg-neutral-900/95 backdrop-blur-md border-t border-neutral-800 px-2 py-1.5 z-30">
-              <div className="grid grid-cols-5 gap-1">
+            {/* Bottom Navigation Tabs: 6 Core Modules */}
+            <nav className="absolute bottom-0 left-0 right-0 bg-neutral-900/95 backdrop-blur-md border-t border-neutral-800 px-1 py-1.5 z-30">
+              <div className="grid grid-cols-6 gap-0.5">
                 {/* 1. 홈 */}
                 <button
                   onClick={() => setActiveTab('home')}
                   className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-colors cursor-pointer ${
-                    activeTab === 'home' ? 'text-emerald-400' : 'text-neutral-400 hover:text-neutral-200'
+                    activeTab === 'home' ? 'text-emerald-400 font-bold' : 'text-neutral-400 hover:text-neutral-200'
                   }`}
                 >
-                  <Home className="w-5 h-5 mb-0.5" />
-                  <span className="text-[10px] font-bold">홈</span>
+                  <Home className="w-4.5 h-4.5 mb-0.5" />
+                  <span className="text-[9.5px]">홈</span>
                 </button>
 
                 {/* 2. AI 코치 */}
                 <button
                   onClick={() => setActiveTab('aiCoach')}
                   className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-colors cursor-pointer ${
-                    activeTab === 'aiCoach' ? 'text-purple-400' : 'text-neutral-400 hover:text-neutral-200'
+                    activeTab === 'aiCoach' ? 'text-purple-400 font-bold' : 'text-neutral-400 hover:text-neutral-200'
                   }`}
                 >
-                  <Sparkles className="w-5 h-5 mb-0.5" />
-                  <span className="text-[10px] font-bold">AI 코치</span>
+                  <Sparkles className="w-4.5 h-4.5 mb-0.5" />
+                  <span className="text-[9.5px]">AI 코치</span>
                 </button>
 
-                {/* 3. 운동일지 */}
+                {/* 3. 일지/분석 */}
                 <button
                   onClick={() => setActiveTab('workoutLog')}
                   className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-colors cursor-pointer ${
-                    activeTab === 'workoutLog' ? 'text-emerald-400' : 'text-neutral-400 hover:text-neutral-200'
+                    activeTab === 'workoutLog' ? 'text-emerald-400 font-bold' : 'text-neutral-400 hover:text-neutral-200'
                   }`}
                 >
-                  <ClipboardEdit className="w-5 h-5 mb-0.5" />
-                  <span className="text-[10px] font-bold">운동일지</span>
+                  <ClipboardEdit className="w-4.5 h-4.5 mb-0.5" />
+                  <span className="text-[9.5px]">일지/분석</span>
                 </button>
 
                 {/* 4. 신체변화 */}
                 <button
                   onClick={() => setActiveTab('bodyRecord')}
                   className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-colors cursor-pointer ${
-                    activeTab === 'bodyRecord' ? 'text-blue-400' : 'text-neutral-400 hover:text-neutral-200'
+                    activeTab === 'bodyRecord' ? 'text-blue-400 font-bold' : 'text-neutral-400 hover:text-neutral-200'
                   }`}
                 >
-                  <TrendingUp className="w-5 h-5 mb-0.5" />
-                  <span className="text-[10px] font-bold">신체변화</span>
+                  <TrendingUp className="w-4.5 h-4.5 mb-0.5" />
+                  <span className="text-[9.5px]">신체변화</span>
                 </button>
 
-                {/* 5. 헬스장 */}
+                {/* 5. 커뮤니티 */}
+                <button
+                  onClick={() => setActiveTab('community')}
+                  className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-colors cursor-pointer ${
+                    activeTab === 'community' ? 'text-indigo-400 font-bold' : 'text-neutral-400 hover:text-neutral-200'
+                  }`}
+                >
+                  <Users className="w-4.5 h-4.5 mb-0.5" />
+                  <span className="text-[9.5px]">커뮤니티</span>
+                </button>
+
+                {/* 6. 헬스장 */}
                 <button
                   onClick={() => setActiveTab('gymSearch')}
                   className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-colors cursor-pointer ${
-                    activeTab === 'gymSearch' ? 'text-amber-400' : 'text-neutral-400 hover:text-neutral-200'
+                    activeTab === 'gymSearch' ? 'text-amber-400 font-bold' : 'text-neutral-400 hover:text-neutral-200'
                   }`}
                 >
-                  <MapPin className="w-5 h-5 mb-0.5" />
-                  <span className="text-[10px] font-bold">헬스장</span>
+                  <MapPin className="w-4.5 h-4.5 mb-0.5" />
+                  <span className="text-[9.5px]">헬스장</span>
                 </button>
               </div>
             </nav>

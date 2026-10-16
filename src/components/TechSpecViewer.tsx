@@ -254,6 +254,42 @@ export async function requestWorkoutRoutine(userParams: {
           </ul>
         </div>
       </div>
+
+      {/* Section 6: Major Enhancement Architectures */}
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 space-y-4">
+        <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+          <h2 className="text-base font-bold text-indigo-400 flex items-center gap-2">
+            <Trophy className="w-4 h-4" /> 6. MVP 고도화 및 신규 기능 기술 명세
+          </h2>
+        </div>
+
+        <div className="space-y-3 text-xs leading-relaxed text-neutral-300">
+          <div className="bg-neutral-950 p-3.5 rounded-xl border border-neutral-800 space-y-2">
+            <h4 className="text-emerald-400 font-bold text-sm">6.1 AI 맞춤 코치 강화 & 피드백 루프 (Adaptive Reinforcement)</h4>
+            <p>
+              - <strong>자세 가이드 & 영상 연동:</strong> 각 운동별 <code>stepGuide(셋업-수축-이완)</code> 및 <code>commonMistakes(초보자 실수 방지)</code> 메타데이터를 구조화하고, 딥링크를 통해 검증된 YouTube 튜토리얼을 1초 내 재생.<br />
+              - <strong>지능형 피드백 루프:</strong> 운동 수행 후 사용자가 체감 난이도(너무 쉬움/적당함/너무 힘듦)와 만족도(1~5점)를 기록하면, 다음 프롬프트에 <code>lastFeedback</code> 매개변수로 주입되어 세트 수(±1세트), 휴식 시간(±15초), 운동 강도가 지능적으로 자동 보정됨.
+            </p>
+          </div>
+
+          <div className="bg-neutral-950 p-3.5 rounded-xl border border-neutral-800 space-y-2">
+            <h4 className="text-blue-400 font-bold text-sm">6.2 운동일지 및 시각화 고도화 (Multi-Period Analytics)</h4>
+            <p>
+              - <strong>주간/월간 중량 및 볼륨 비교:</strong> 이번 주 vs 지난 주 총 누적 볼륨(kg), 완료 세트 수, 운동 시간을 비교하고 성장률(+12.4% ▲)을 실시간 집계.<br />
+              - <strong>종목별 성장 추이 그래프:</strong> 체스트 프레스, 랫풀다운, 레그프레스 등 특정 종목을 선택하여 1RM 최고 중량과 세션별 총 볼륨 변화 곡선을 SVG 차트로 가시화.
+            </p>
+          </div>
+
+          <div className="bg-neutral-950 p-3.5 rounded-xl border border-neutral-800 space-y-2">
+            <h4 className="text-indigo-400 font-bold text-sm">6.3 커뮤니티 & 소셜 파트너 아키텍처</h4>
+            <p>
+              - <strong>목표 달성 챌린지:</strong> 주 4회 출석, 2만kg 볼륨, 바디프로필 등 단체 미션 참여 및 진행률 트래킹.<br />
+              - <strong>실시간 리더보드:</strong> 주간 누적 볼륨 및 출석 일수 기반 랭킹과 상호 응원(Heart) 시스템.<br />
+              - <strong>헬스메이트 매칭:</strong> 운동 목표(근비대/다이어트), 선호 시간대(새벽/저녁), 활동 헬스장 거리 기반 매칭 스코어(Match Score) 산출 및 파트너 신청 인터랙션.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

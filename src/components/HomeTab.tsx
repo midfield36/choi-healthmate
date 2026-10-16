@@ -3,7 +3,7 @@ import { Sparkles, ClipboardEdit, TrendingUp, MapPin, Play, Flame, Award, Chevro
 import { WorkoutLogItem } from '../types/healthmate';
 
 interface HomeTabProps {
-  onNavigateTab: (tabId: 'home' | 'aiCoach' | 'workoutLog' | 'bodyRecord' | 'gymSearch') => void;
+  onNavigateTab: (tabId: 'home' | 'aiCoach' | 'workoutLog' | 'bodyRecord' | 'community' | 'gymSearch') => void;
   recentLogs: WorkoutLogItem[];
   onStartTodayWorkout: () => void;
   userName: string;
@@ -111,6 +111,15 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           </div>
           <div className="w-full h-2 bg-neutral-700/70 rounded-full overflow-hidden">
             <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: '75%' }} />
+          </div>
+          <div className="flex justify-between items-center mt-2.5 pt-2 border-t border-neutral-750/50">
+            <span className="text-[11px] text-neutral-400">전국 출석 챌린지 14위 달리는 중 🏆</span>
+            <button
+              onClick={() => onNavigateTab('community')}
+              className="text-[11px] text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-0.5 cursor-pointer"
+            >
+              커뮤니티 챌린지 보기 <ChevronRight className="w-3 h-3" />
+            </button>
           </div>
         </div>
       </div>

@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
-import { Sparkles, Dumbbell, ShieldAlert, ChevronDown, ChevronUp, RotateCcw, CheckCircle, ArrowRight, Play, Info } from 'lucide-react';
-import { UserLevel, WorkoutGoal, WorkoutPlace, WorkoutRoutineResponse } from '../types/healthmate';
+import { Sparkles, Dumbbell, ShieldAlert, ChevronDown, ChevronUp, RotateCcw, CheckCircle, ArrowRight, Play, Info, Video, ExternalLink, Star, ThumbsUp, AlertTriangle, MessageSquare, History } from 'lucide-react';
+import { UserLevel, WorkoutGoal, WorkoutPlace, WorkoutRoutineResponse, RoutineFeedback, ExerciseDetail } from '../types/healthmate';
 import { generateAIWorkoutRoutine } from '../services/geminiCoach';
 
 interface AICoachTabProps {
   onApplyRoutineToLog: (routine: WorkoutRoutineResponse) => void;
+  lastFeedback?: RoutineFeedback | null;
+  onSaveFeedback: (feedback: RoutineFeedback) => void;
 }
 
-export const AICoachTab: React.FC<AICoachTabProps> = ({ onApplyRoutineToLog }) => {
+export const AICoachTab: React.FC<AICoachTabProps> = ({
+  onApplyRoutineToLog,
+  lastFeedback,
+  onSaveFeedback,
+}) => {
   // Input states
   const [level, setLevel] = useState<UserLevel>('beginner');
   const [goal, setGoal] = useState<WorkoutGoal>('hypertrophy');
@@ -22,6 +28,16 @@ export const AICoachTab: React.FC<AICoachTabProps> = ({ onApplyRoutineToLog }) =
   const [expandedGuideIndex, setExpandedGuideIndex] = useState<number | null>(0);
   const [appliedMessage, setAppliedMessage] = useState<boolean>(false);
 
+  // Video & Detailed Guide Modal State
+  const [selectedExerciseForModal, setSelectedExerciseForModal] = useState<ExerciseDetail | null>(null);
+
+  // Feedback Form State (for completing routine)
+  const [showFeedbackModal, setShowFeedbackModal] = useState<boolean>(false);
+  const [feedbackDifficulty, setFeedbackDifficulty] = useState<'too_easy' | 'just_right' | 'too_hard'>('just_right');
+  const [feedbackSatisfaction, setFeedbackSatisfaction] = useState<number>(5);
+  const [feedbackText, setFeedbackText] = useState<string>('');
+  const [feedbackSavedToast, setFeedbackSavedToast] = useState<boolean>(false);
+
   const handleGenerate = async () => {
     setIsLoading(true);
     setAppliedMessage(false);
@@ -33,6 +49,7 @@ export const AICoachTab: React.FC<AICoachTabProps> = ({ onApplyRoutineToLog }) =
         targetSplit,
         durationMinutes,
         limitations: limitations.trim() || undefined,
+        lastFeedback,
       });
       setGeneratedRoutine(result);
       setExpandedGuideIndex(0);
@@ -51,33 +68,84 @@ export const AICoachTab: React.FC<AICoachTabProps> = ({ onApplyRoutineToLog }) =
     }
   };
 
+  const handleOpenVideoSearch = (exercise: ExerciseDetail) => {
+    const query = exercise.videoSearchQuery || `${exercise.name} 올바른 자세 꿀팁`;
+    const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleSubmitFeedback = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!generatedRoutine) return;
+
+    const newFeedback: RoutineFeedback = {
+      id: 'fb_' + Date.now(),
+      routineTitle: generatedRoutine.routineTitle,
+      difficulty: feedbackDifficulty,
+      satisfaction: feedbackSatisfaction,
+      feedbackText: feedbackText.trim(),
+      date: new Date().toISOString().split('T')[0],
+    };
+
+    onSaveFeedback(newFeedback);
+    setShowFeedbackModal(false);
+    setFeedbackSavedToast(true);
+    setTimeout(() => setFeedbackSavedToast(false), 3000);
+  };
+
   return (
     <div className="space-y-5 pb-8">
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-950/60 via-neutral-900 to-neutral-900 border border-purple-800/40 rounded-2xl p-4 text-white">
-        <div className="flex items-center gap-2.5 mb-1.5">
-          <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/30">
-            <Sparkles className="w-4 h-4" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/30">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-white">AI 맞춤 운동 코치</h2>
+              <p className="text-xs text-neutral-400">자세 영상 가이드 & 피드백 기반 자동 보정</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-base font-bold text-white">AI 맞춤 운동 코치</h2>
-            <p className="text-xs text-neutral-400">Google AI Studio Gemini 기반 맞춤 루틴 설계</p>
-          </div>
+          {lastFeedback && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+              ✓ 피드백 반영 모드
+            </span>
+          )}
         </div>
       </div>
+
+      {/* Active Feedback Loop Reminder Banner */}
+      {lastFeedback && (
+        <div className="bg-neutral-900/90 border border-purple-500/40 rounded-2xl p-3.5 flex items-start gap-3">
+          <div className="p-2 rounded-xl bg-purple-500/15 text-purple-400 mt-0.5">
+            <MessageSquare className="w-4 h-4" />
+          </div>
+          <div className="flex-1 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-white">최근 운동 피드백 반영 활성화됨</span>
+              <span className="text-[10px] text-neutral-400">{lastFeedback.date}</span>
+            </div>
+            <p className="text-neutral-300 text-[11px] mt-0.5">
+              체감 난이도: <strong className="text-purple-300">{lastFeedback.difficulty === 'too_easy' ? '너무 쉬움 (강도 상향)' : lastFeedback.difficulty === 'too_hard' ? '너무 힘듦 (피로도 완화)' : '적당함'}</strong>
+              {lastFeedback.feedbackText && ` · "${lastFeedback.feedbackText}"`}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Input Form Card */}
       <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 space-y-4">
         {/* 1. 수준 선택 */}
         <div>
           <label className="block text-xs font-bold text-neutral-300 mb-2">
-            1. 나의 운동 수준 (난이도 및 기구 숙련도)
+            1. 나의 운동 수준
           </label>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { id: 'beginner', label: '초급자', desc: '0~6개월 머신 위주' },
-              { id: 'intermediate', label: '중급자', desc: '6개월~2년 자극 위주' },
-              { id: 'advanced', label: '상급자', desc: '2년+ 고중량 과부하' },
+              { id: 'beginner', label: '초급자', desc: '머신/자세 위주' },
+              { id: 'intermediate', label: '중급자', desc: '타깃 근비대' },
+              { id: 'advanced', label: '상급자', desc: '고중량 과부하' },
             ].map((item) => (
               <button
                 key={item.id}
@@ -182,7 +250,7 @@ export const AICoachTab: React.FC<AICoachTabProps> = ({ onApplyRoutineToLog }) =
             type="text"
             value={limitations}
             onChange={(e) => setLimitations(e.target.value)}
-            placeholder="예: 허리 디스크 초기 증상, 오른쪽 손목 불편"
+            placeholder="예: 허리 디스크 초기 증상, 오른쪽 손목 통증"
             className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-purple-500"
           />
         </div>
@@ -197,7 +265,7 @@ export const AICoachTab: React.FC<AICoachTabProps> = ({ onApplyRoutineToLog }) =
           {isLoading ? (
             <>
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              <span>Gemini AI 코치가 루틴을 조율 중입니다...</span>
+              <span>Gemini AI 코치가 피드백을 반영하여 설계 중입니다...</span>
             </>
           ) : (
             <>
@@ -207,6 +275,13 @@ export const AICoachTab: React.FC<AICoachTabProps> = ({ onApplyRoutineToLog }) =
           )}
         </button>
       </div>
+
+      {feedbackSavedToast && (
+        <div className="bg-emerald-950/80 border border-emerald-500 text-emerald-300 px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-lg animate-in fade-in">
+          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>피드백이 저장되었습니다! 다음 AI 추천 시 볼륨과 강도에 자동 반영됩니다.</span>
+        </div>
+      )}
 
       {/* Generated Routine Output */}
       {generatedRoutine && (
@@ -222,16 +297,32 @@ export const AICoachTab: React.FC<AICoachTabProps> = ({ onApplyRoutineToLog }) =
               </span>
             </div>
             <h3 className="text-lg font-bold text-white mb-1">{generatedRoutine.routineTitle}</h3>
-            <p className="text-xs text-neutral-300 leading-relaxed">{generatedRoutine.summary}</p>
+            <p className="text-xs text-neutral-300 leading-relaxed mb-2">{generatedRoutine.summary}</p>
 
-            {/* Apply Action */}
-            <div className="mt-4 pt-3 border-t border-neutral-800 flex items-center justify-between">
+            {/* AI Adaptation Note (if feedback was reflected) */}
+            {generatedRoutine.aiAdaptationNote && (
+              <div className="bg-purple-950/40 border border-purple-600/40 rounded-xl p-2.5 text-[11px] text-purple-200 leading-relaxed flex items-start gap-2 mb-3">
+                <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5" />
+                <span>{generatedRoutine.aiAdaptationNote}</span>
+              </div>
+            )}
+
+            {/* Actions: Start Today's Workout + Feedback Button */}
+            <div className="pt-2 border-t border-neutral-800 flex flex-col sm:flex-row gap-2">
               <button
                 onClick={handleApplyToWorkout}
-                className="w-full py-2.5 px-4 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition cursor-pointer shadow-md shadow-emerald-500/20"
+                className="flex-1 py-2.5 px-4 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition cursor-pointer shadow-md shadow-emerald-500/20"
               >
                 <Play className="w-3.5 h-3.5 fill-neutral-950" />
                 이 루틴으로 바로 오늘 운동 시작하기 (운동일지 복사)
+              </button>
+              <button
+                onClick={() => setShowFeedbackModal(true)}
+                className="py-2.5 px-3 bg-neutral-800 hover:bg-neutral-750 text-neutral-300 border border-neutral-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer"
+                title="수행 후 난이도 피드백 남기기"
+              >
+                <MessageSquare className="w-3.5 h-3.5 text-purple-400" />
+                운동 피드백 남기기
               </button>
             </div>
             {appliedMessage && (
@@ -262,7 +353,7 @@ export const AICoachTab: React.FC<AICoachTabProps> = ({ onApplyRoutineToLog }) =
               <h4 className="text-sm font-bold text-neutral-200">
                 본운동 프로그램 ({generatedRoutine.exercises.length}개 종목)
               </h4>
-              <span className="text-[11px] text-neutral-400">기구 사용법 터치하여 확인</span>
+              <span className="text-[11px] text-neutral-400">자세 영상 가이드 제공</span>
             </div>
 
             {generatedRoutine.exercises.map((exercise, idx) => {
@@ -295,19 +386,35 @@ export const AICoachTab: React.FC<AICoachTabProps> = ({ onApplyRoutineToLog }) =
                     </div>
                   </div>
 
-                  {/* Equipment summary & Accordion trigger */}
-                  <div className="mt-3 pt-3 border-t border-neutral-800/80 flex items-center justify-between">
+                  {/* Equipment & Video Quick Action Bar */}
+                  <div className="mt-3 pt-3 border-t border-neutral-800/80 flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs text-neutral-300 font-medium flex items-center gap-1">
                       <Dumbbell className="w-3.5 h-3.5 text-neutral-400" />
                       기구: {exercise.equipment}
                     </span>
-                    <button
-                      onClick={() => setExpandedGuideIndex(isExpanded ? null : idx)}
-                      className="text-[11px] text-purple-400 hover:text-purple-300 flex items-center gap-0.5 font-semibold cursor-pointer"
-                    >
-                      {isExpanded ? '가이드 접기' : '기구 사용법 및 팁 보기'}
-                      {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                    </button>
+
+                    <div className="flex items-center gap-2">
+                      {/* Video Guide Modal Trigger */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedExerciseForModal(exercise)}
+                        className="px-2 py-1 bg-red-600/15 hover:bg-red-600/25 border border-red-500/30 text-red-400 rounded-lg text-[11px] font-bold flex items-center gap-1 transition cursor-pointer"
+                        title="자세 가이드 & 영상 보기"
+                      >
+                        <Video className="w-3 h-3" />
+                        자세 영상 가이드
+                      </button>
+
+                      {/* Accordion trigger */}
+                      <button
+                        type="button"
+                        onClick={() => setExpandedGuideIndex(isExpanded ? null : idx)}
+                        className="text-[11px] text-purple-400 hover:text-purple-300 flex items-center gap-0.5 font-semibold cursor-pointer"
+                      >
+                        {isExpanded ? '가이드 접기' : '상세 보기'}
+                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
                   </div>
 
                   {/* Expanded Guide Card */}
@@ -336,6 +443,43 @@ export const AICoachTab: React.FC<AICoachTabProps> = ({ onApplyRoutineToLog }) =
                         </ul>
                       </div>
 
+                      {/* Step by step preview */}
+                      {exercise.stepGuide && exercise.stepGuide.length > 0 && (
+                        <div className="pt-2 border-t border-neutral-700/60">
+                          <span className="font-bold text-amber-400 block mb-1.5">
+                            📋 3단계 수행 가이드:
+                          </span>
+                          <div className="grid grid-cols-1 gap-1.5">
+                            {exercise.stepGuide.map((sg) => (
+                              <div key={sg.step} className="bg-neutral-850 p-2 rounded-lg text-[11px]">
+                                <span className="font-bold text-neutral-200 mr-1.5">
+                                  {sg.step}단계 ({sg.title}):
+                                </span>
+                                <span className="text-neutral-400">{sg.description}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Common mistakes */}
+                      {exercise.commonMistakes && exercise.commonMistakes.length > 0 && (
+                        <div className="pt-2 border-t border-neutral-700/60">
+                          <span className="font-bold text-red-400 block mb-1 flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3" />
+                            초보자 주의 실수:
+                          </span>
+                          <ul className="space-y-0.5 text-neutral-400 text-[11px]">
+                            {exercise.commonMistakes.map((cm, cIdx) => (
+                              <li key={cIdx} className="flex items-start gap-1">
+                                <span className="text-red-400 font-bold">✕</span>
+                                <span>{cm}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
                       {exercise.alternativeExercise && (
                         <div className="text-[11px] text-neutral-400 pt-1 border-t border-neutral-700/60">
                           <span className="font-semibold text-neutral-300">대체 운동: </span>
@@ -362,6 +506,208 @@ export const AICoachTab: React.FC<AICoachTabProps> = ({ onApplyRoutineToLog }) =
                 </li>
               ))}
             </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Video & Posture Detailed Modal */}
+      {selectedExerciseForModal && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+          <div className="bg-neutral-900 border border-neutral-750 rounded-2xl w-full max-w-md p-5 space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto">
+            <div className="flex items-start justify-between border-b border-neutral-800 pb-3">
+              <div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
+                  {selectedExerciseForModal.targetMuscle}
+                </span>
+                <h3 className="text-base font-bold text-white mt-1">
+                  {selectedExerciseForModal.name} 자세 가이드
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedExerciseForModal(null)}
+                className="text-neutral-500 hover:text-white p-1 rounded-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Video Search Callout Card */}
+            <div className="bg-gradient-to-br from-red-950/30 to-neutral-850 border border-red-600/40 rounded-xl p-4 space-y-2.5">
+              <div className="flex items-center gap-2 text-red-400 font-bold text-xs">
+                <Video className="w-4 h-4" />
+                <span>유튜브 정확한 자세 영상 바로보기</span>
+              </div>
+              <p className="text-neutral-300 text-xs leading-relaxed">
+                검증된 피트니스 전문가의 올바른 기구 세팅 궤적과 부상 방지 팁을 유튜브 고화질 영상으로 즉시 확인하세요.
+              </p>
+              <button
+                onClick={() => handleOpenVideoSearch(selectedExerciseForModal)}
+                className="w-full py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-md shadow-red-600/30 transition cursor-pointer"
+              >
+                <span>YouTube에서 "{selectedExerciseForModal.videoSearchQuery || selectedExerciseForModal.name}" 영상 재생</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Step-by-Step Posture Breakdown */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold text-neutral-300">단계별 정확한 수행 가이드</h4>
+              {selectedExerciseForModal.stepGuide && selectedExerciseForModal.stepGuide.length > 0 ? (
+                selectedExerciseForModal.stepGuide.map((sg) => (
+                  <div key={sg.step} className="bg-neutral-800/70 border border-neutral-750 p-3 rounded-xl space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center">
+                        {sg.step}
+                      </span>
+                      <span className="text-xs font-bold text-white">{sg.title}</span>
+                    </div>
+                    <p className="text-xs text-neutral-300 leading-relaxed pl-7">{sg.description}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="bg-neutral-800/70 p-3 rounded-xl text-xs text-neutral-300">
+                  {selectedExerciseForModal.equipmentGuide}
+                </div>
+              )}
+            </div>
+
+            {/* Mistakes & Safety Warnings */}
+            {selectedExerciseForModal.commonMistakes && (
+              <div className="bg-neutral-850 border border-neutral-750 p-3 rounded-xl space-y-1.5">
+                <span className="text-xs font-bold text-red-400 flex items-center gap-1">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  초보자가 자주 하는 위험한 자세 (주의)
+                </span>
+                <ul className="space-y-1 text-xs text-neutral-400">
+                  {selectedExerciseForModal.commonMistakes.map((m, i) => (
+                    <li key={i} className="flex items-start gap-1.5">
+                      <span className="text-red-400 font-bold">✕</span>
+                      <span>{m}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <button
+              onClick={() => setSelectedExerciseForModal(null)}
+              className="w-full py-2.5 bg-neutral-800 hover:bg-neutral-750 text-neutral-200 rounded-xl text-xs font-bold transition cursor-pointer"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Routine Feedback & Adaptation Modal */}
+      {showFeedbackModal && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+          <div className="bg-neutral-900 border border-neutral-750 rounded-2xl w-full max-w-sm p-5 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center">
+                  <MessageSquare className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">운동 난이도 & 만족도 피드백</h3>
+                  <p className="text-[11px] text-neutral-400">다음 AI 루틴 설계에 즉시 반영됩니다</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowFeedbackModal(false)}
+                className="text-neutral-500 hover:text-white p-1 rounded-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitFeedback} className="space-y-4">
+              {/* Difficulty selector */}
+              <div>
+                <label className="text-xs font-bold text-neutral-300 block mb-2">
+                  체감 운동 난이도는 어떠셨나요?
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: 'too_easy', label: '너무 쉬움', sub: '강도 올림' },
+                    { id: 'just_right', label: '딱 적당함', sub: '현 상태 유지' },
+                    { id: 'too_hard', label: '너무 힘듦', sub: '피로도 완화' },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setFeedbackDifficulty(item.id as any)}
+                      className={`p-2 rounded-xl border text-center transition-all cursor-pointer ${
+                        feedbackDifficulty === item.id
+                          ? 'bg-purple-600/30 border-purple-500 text-white'
+                          : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:text-white'
+                      }`}
+                    >
+                      <div className="text-xs font-bold">{item.label}</div>
+                      <div className="text-[10px] text-neutral-400 mt-0.5">{item.sub}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Star Satisfaction */}
+              <div>
+                <label className="text-xs font-bold text-neutral-300 block mb-1.5">
+                  루틴 구성 만족도
+                </label>
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setFeedbackSatisfaction(star)}
+                      className="p-1 cursor-pointer transition-transform hover:scale-125"
+                    >
+                      <Star
+                        className={`w-6 h-6 ${
+                          star <= feedbackSatisfaction
+                            ? 'text-amber-400 fill-amber-400'
+                            : 'text-neutral-600'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                  <span className="text-xs font-bold text-amber-400 ml-1">
+                    {feedbackSatisfaction}점 / 5점
+                  </span>
+                </div>
+              </div>
+
+              {/* Text feedback */}
+              <div>
+                <label className="text-xs font-bold text-neutral-300 block mb-1.5">
+                  추가 피드백 (선택)
+                </label>
+                <textarea
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  placeholder="예: 어깨에 약간 뻐근함이 있었어요, 벤치프레스는 세트를 늘려도 될 것 같아요"
+                  rows={2}
+                  className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowFeedbackModal(false)}
+                  className="flex-1 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-xl text-xs font-semibold cursor-pointer"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold shadow-md shadow-purple-600/30 cursor-pointer"
+                >
+                  피드백 제출 및 반영
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
