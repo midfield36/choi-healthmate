@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { Home, Sparkles, ClipboardEdit, TrendingUp, MapPin, Smartphone, FileCode2, Dumbbell, ShieldCheck, Users } from 'lucide-react';
+import { Home, Sparkles, ClipboardEdit, TrendingUp, MapPin, Smartphone, FileCode2, Dumbbell, ShieldCheck, Users, Camera } from 'lucide-react';
 import { HomeTab } from './components/HomeTab';
 import { AICoachTab } from './components/AICoachTab';
 import { WorkoutLogTab } from './components/WorkoutLogTab';
 import { BodyRecordTab } from './components/BodyRecordTab';
 import { GymSearchTab } from './components/GymSearchTab';
 import { CommunityTab } from './components/CommunityTab';
+import { DietAITab } from './components/DietAITab';
 import { TechSpecViewer } from './components/TechSpecViewer';
-import { WorkoutLogItem, WorkoutRoutineResponse, LoggedExercise, BodyRecord, RoutineFeedback } from './types/healthmate';
+import { WorkoutLogItem, WorkoutRoutineResponse, LoggedExercise, BodyRecord, RoutineFeedback, DietMealAnalysis } from './types/healthmate';
 
 export default function App() {
   const [viewMode, setViewMode] = useState<'mobile' | 'techSpec'>('mobile');
-  const [activeTab, setActiveTab] = useState<'home' | 'aiCoach' | 'workoutLog' | 'bodyRecord' | 'community' | 'gymSearch'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'aiCoach' | 'dietAI' | 'workoutLog' | 'bodyRecord' | 'community' | 'gymSearch'>('home');
 
   // User Profile state (persisted in localStorage)
   const [userName, setUserName] = useState<string>(() => {
@@ -53,6 +54,25 @@ export default function App() {
 
   const handleSaveFeedback = (feedback: RoutineFeedback) => {
     setLastFeedback(feedback);
+  };
+
+  // Vision AI Diet Meals state
+  const [savedMeals, setSavedMeals] = useState<DietMealAnalysis[]>([
+    {
+      id: 'meal_init_1',
+      mealType: 'breakfast',
+      dishName: '수비드 닭가슴살 샐러드 & 오리엔탈 드레싱',
+      estimatedCalories: 380,
+      proteinGrams: 36.5,
+      carbsGrams: 32.0,
+      fatGrams: 8.5,
+      aiAdvice: '고단백 식단으로 아침 기상 직후 근합성 스위치를 켜기에 훌륭합니다.',
+      date: '2026-10-16',
+    },
+  ]);
+
+  const handleSaveMeal = (meal: DietMealAnalysis) => {
+    setSavedMeals((prev) => [meal, ...prev]);
   };
 
   // Initial mock workout data for immediate rich experience
@@ -274,6 +294,14 @@ export default function App() {
                 />
               )}
 
+              {activeTab === 'dietAI' && (
+                <DietAITab
+                  userGoal="hypertrophy"
+                  savedMeals={savedMeals}
+                  onSaveMeal={handleSaveMeal}
+                />
+              )}
+
               {activeTab === 'workoutLog' && (
                 <WorkoutLogTab
                   currentWorkout={currentSession}
@@ -318,7 +346,18 @@ export default function App() {
                   <span className="text-[9.5px]">AI 코치</span>
                 </button>
 
-                {/* 3. 일지/분석 */}
+                {/* 3. AI 식단 */}
+                <button
+                  onClick={() => setActiveTab('dietAI')}
+                  className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-colors cursor-pointer ${
+                    activeTab === 'dietAI' ? 'text-emerald-400 font-bold' : 'text-neutral-400 hover:text-neutral-200'
+                  }`}
+                >
+                  <Camera className="w-4.5 h-4.5 mb-0.5" />
+                  <span className="text-[9.5px]">AI 식단</span>
+                </button>
+
+                {/* 4. 일지/분석 */}
                 <button
                   onClick={() => setActiveTab('workoutLog')}
                   className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-colors cursor-pointer ${
@@ -329,7 +368,7 @@ export default function App() {
                   <span className="text-[9.5px]">일지/분석</span>
                 </button>
 
-                {/* 4. 신체변화 */}
+                {/* 5. 신체변화 */}
                 <button
                   onClick={() => setActiveTab('bodyRecord')}
                   className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-colors cursor-pointer ${
@@ -340,7 +379,7 @@ export default function App() {
                   <span className="text-[9.5px]">신체변화</span>
                 </button>
 
-                {/* 5. 커뮤니티 */}
+                {/* 6. 커뮤니티 */}
                 <button
                   onClick={() => setActiveTab('community')}
                   className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-colors cursor-pointer ${
@@ -349,17 +388,6 @@ export default function App() {
                 >
                   <Users className="w-4.5 h-4.5 mb-0.5" />
                   <span className="text-[9.5px]">커뮤니티</span>
-                </button>
-
-                {/* 6. 헬스장 */}
-                <button
-                  onClick={() => setActiveTab('gymSearch')}
-                  className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-colors cursor-pointer ${
-                    activeTab === 'gymSearch' ? 'text-amber-400 font-bold' : 'text-neutral-400 hover:text-neutral-200'
-                  }`}
-                >
-                  <MapPin className="w-4.5 h-4.5 mb-0.5" />
-                  <span className="text-[9.5px]">헬스장</span>
                 </button>
               </div>
             </nav>

@@ -87,6 +87,10 @@ export interface GenerateWorkoutParams {
   durationMinutes: number; // e.g., 50
   limitations?: string; // e.g., "허리 디스크 초기 주의", "무릎 통증"
   lastFeedback?: RoutineFeedback | null; // User feedback loop
+  injuryHistory?: string[]; // e.g., ['어깨 회전근개', '허리 요추 디스크', '손목 통증']
+  equipmentPreference?: string; // e.g., '안전한 머신 위주', '프리웨이트 바벨/덤벨', '케이블 위주'
+  avoidEquipments?: string[]; // e.g., ['딥스 제외', '바벨 백스쿼트 제외']
+  pastWorkoutSummary?: string; // e.g., '최근 3회: 가슴(45kg) 완료, 등(50kg) 완료'
 }
 
 export async function generateAIWorkoutRoutine(params: GenerateWorkoutParams): Promise<WorkoutRoutineResponse> {
@@ -108,13 +112,27 @@ export async function generateAIWorkoutRoutine(params: GenerateWorkoutParams): P
 * AI 코칭 지시: 위 피드백을 토대로 이번 세트수/반복수/휴식시간을 최적화하고, 'aiAdaptationNote'에 어떤 피드백을 수렴하여 개선했는지 구체적으로 적어주세요.`;
   }
 
+  let deepProfileSection = '';
+  if (params.injuryHistory && params.injuryHistory.length > 0) {
+    deepProfileSection += `\n[부상 이력 및 관절 보호 요구사항]: ${params.injuryHistory.join(', ')} 부상 위험을 철저히 배제하는 안전한 궤적의 운동으로 구성하세요.`;
+  }
+  if (params.equipmentPreference) {
+    deepProfileSection += `\n[기구 선호도]: ${params.equipmentPreference}`;
+  }
+  if (params.avoidEquipments && params.avoidEquipments.length > 0) {
+    deepProfileSection += `\n[기피/제외 기구]: ${params.avoidEquipments.join(', ')}는 절대로 프로그램에 포함하지 마세요.`;
+  }
+  if (params.pastWorkoutSummary) {
+    deepProfileSection += `\n[과거 운동 기록 누적 데이터]: ${params.pastWorkoutSummary}`;
+  }
+
   const userPrompt = `[사용자 프로필 및 요청]
 - 운동 수준: ${params.level === 'beginner' ? '초급자 (헬스 0~6개월, 기구 사용법 미숙)' : params.level === 'intermediate' ? '중급자 (헬스 6개월~2년, 3대 운동 및 기본 자세 숙지)' : '상급자 (헬스 2년 이상, 고강도 점진적 과부하 가능)'}
 - 운동 목적: ${params.goal === 'hypertrophy' ? '근비대 (근육량 증가 및 볼륨감)' : params.goal === 'fat_loss' ? '체지방 감소 및 린매스업' : params.goal === 'strength' ? '근력 및 스트렝스 향상' : '체형 교정 및 재활'}
 - 운동 장소: ${params.place === 'gym' ? '헬스장 (피트니스 센터 머신 및 프리웨이트 완비)' : params.place === 'home' ? '홈트레이닝 (맨몸 및 덤벨/밴드)' : '야외 공원/철봉'}
 - 선호 운동 부위: ${params.targetSplit}
 - 1회 운동 희망 시간: ${params.durationMinutes}분
-- 신체 특이사항/부상: ${params.limitations || '특이사항 없음 (건강)'}${feedbackSection}
+- 신체 특이사항/부상: ${params.limitations || '특이사항 없음 (건강)'}${deepProfileSection}${feedbackSection}
 
 위 조건에 꼭 맞는 맞춤형 데일리 운동 루틴을 JSON 스키마에 맞춰 생성해주세요.`;
 

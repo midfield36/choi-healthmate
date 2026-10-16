@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Sparkles, ClipboardEdit, TrendingUp, MapPin, Play, Flame, Award, ChevronRight, CheckCircle2, Clock, Edit3, Check, X, User } from 'lucide-react';
+import { Sparkles, ClipboardEdit, TrendingUp, MapPin, Play, Flame, Award, ChevronRight, CheckCircle2, Clock, Edit3, Check, X, User, Camera } from 'lucide-react';
 import { WorkoutLogItem } from '../types/healthmate';
 
 interface HomeTabProps {
-  onNavigateTab: (tabId: 'home' | 'aiCoach' | 'workoutLog' | 'bodyRecord' | 'community' | 'gymSearch') => void;
+  onNavigateTab: (tabId: 'home' | 'aiCoach' | 'dietAI' | 'workoutLog' | 'bodyRecord' | 'community' | 'gymSearch') => void;
   recentLogs: WorkoutLogItem[];
   onStartTodayWorkout: () => void;
   userName: string;
@@ -158,6 +158,32 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             루틴 변경
           </button>
         </div>
+      </div>
+
+      {/* Vision AI Diet Analyzer Quick Banner */}
+      <div
+        onClick={() => onNavigateTab('dietAI')}
+        className="bg-gradient-to-r from-emerald-950/60 via-neutral-900 to-teal-950/40 border border-emerald-500/40 hover:border-emerald-500 rounded-2xl p-4 flex items-center justify-between cursor-pointer transition-all shadow-md group"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <Camera className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300">
+                NEW 비전 AI
+              </span>
+              <h4 className="text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">
+                식단 사진 분석 & 칼로리 계산
+              </h4>
+            </div>
+            <p className="text-[11px] text-neutral-400 mt-0.5">
+              음식 사진 한 장으로 탄·단·지 영양소 자동 분석
+            </p>
+          </div>
+        </div>
+        <ChevronRight className="w-4 h-4 text-neutral-400 group-hover:text-emerald-400 transition-colors" />
       </div>
 
       {/* 4 Quick Menus */}

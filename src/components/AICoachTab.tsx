@@ -22,6 +22,12 @@ export const AICoachTab: React.FC<AICoachTabProps> = ({
   const [durationMinutes, setDurationMinutes] = useState<number>(50);
   const [limitations, setLimitations] = useState<string>('');
 
+  // Deep Personalization states
+  const [selectedInjuries, setSelectedInjuries] = useState<string[]>(['어깨 회전근개', '손목 관절']);
+  const [equipmentPreference, setEquipmentPreference] = useState<string>('머신 위주(안전 고립)');
+  const [selectedAvoids, setSelectedAvoids] = useState<string[]>(['딥스 제외']);
+  const [syncPastHistory, setSyncPastHistory] = useState<boolean>(true);
+
   // Execution states
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [generatedRoutine, setGeneratedRoutine] = useState<WorkoutRoutineResponse | null>(null);
@@ -50,6 +56,12 @@ export const AICoachTab: React.FC<AICoachTabProps> = ({
         durationMinutes,
         limitations: limitations.trim() || undefined,
         lastFeedback,
+        injuryHistory: selectedInjuries.filter((i) => i !== '건강 (부상 없음)'),
+        equipmentPreference,
+        avoidEquipments: selectedAvoids,
+        pastWorkoutSummary: syncPastHistory
+          ? '최근 3회: 체스트프레스(45kg) 완료, 랫풀다운(50kg) 완료, 주간 누적 18,450kg 달성'
+          : undefined,
       });
       setGeneratedRoutine(result);
       setExpandedGuideIndex(0);
@@ -244,15 +256,118 @@ export const AICoachTab: React.FC<AICoachTabProps> = ({
         <div>
           <label className="block text-xs font-bold text-neutral-300 mb-1.5 flex items-center gap-1">
             <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-            신체 특이사항 / 주의 부위 (선택)
+            부상 이력 및 관절 보호 부위 (다중 선택)
           </label>
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {[
+              '어깨 회전근개',
+              '허리 요추 디스크',
+              '손목 관절',
+              '무릎 연골',
+              '팔꿈치 엘보',
+              '건강 (부상 없음)',
+            ].map((inj) => {
+              const isSelected = selectedInjuries.includes(inj);
+              return (
+                <button
+                  key={inj}
+                  type="button"
+                  onClick={() => {
+                    if (inj === '건강 (부상 없음)') {
+                      setSelectedInjuries(isSelected ? [] : ['건강 (부상 없음)']);
+                    } else {
+                      const filtered = selectedInjuries.filter((i) => i !== '건강 (부상 없음)');
+                      setSelectedInjuries(
+                        isSelected ? filtered.filter((i) => i !== inj) : [...filtered, inj]
+                      );
+                    }
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/60 shadow-xs'
+                      : 'bg-neutral-800/80 text-neutral-400 border-neutral-700 hover:text-neutral-200'
+                  }`}
+                >
+                  {inj}
+                </button>
+              );
+            })}
+          </div>
           <input
             type="text"
             value={limitations}
             onChange={(e) => setLimitations(e.target.value)}
-            placeholder="예: 허리 디스크 초기 증상, 오른쪽 손목 통증"
+            placeholder="기타 특이사항 (예: 쇄골 수술 이력, 오른쪽 고관절 가동 범위 제한)"
             className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-purple-500"
           />
+        </div>
+
+        {/* 6. 기구 선호도 & 기피 운동 */}
+        <div className="pt-2 border-t border-neutral-800/80 space-y-3">
+          <div>
+            <label className="block text-xs font-bold text-neutral-300 mb-1.5">
+              6. 선호 기구 구성
+            </label>
+            <div className="grid grid-cols-3 gap-1.5">
+              {['머신 위주(안전 고립)', '프리웨이트(바벨/덤벨)', '케이블 머신 위주'].map((pref) => (
+                <button
+                  key={pref}
+                  type="button"
+                  onClick={() => setEquipmentPreference(pref)}
+                  className={`py-1.5 px-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                    equipmentPreference === pref
+                      ? 'bg-purple-600/30 text-purple-300 border-purple-500'
+                      : 'bg-neutral-800/80 text-neutral-400 border-neutral-700 hover:text-neutral-200'
+                  }`}
+                >
+                  {pref}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-neutral-300 mb-1.5">
+              기피/제외하고 싶은 운동 (루틴에서 배제)
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {['딥스 제외', '바벨 백스쿼트 제외', '비하인드 넥프레스 제외', '루마니안 데드리프트 제외'].map((avoid) => {
+                const isAvoided = selectedAvoids.includes(avoid);
+                return (
+                  <button
+                    key={avoid}
+                    type="button"
+                    onClick={() => {
+                      setSelectedAvoids(
+                        isAvoided ? selectedAvoids.filter((a) => a !== avoid) : [...selectedAvoids, avoid]
+                      );
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-[10.5px] font-semibold border transition-all cursor-pointer ${
+                      isAvoided
+                        ? 'bg-red-500/20 text-red-300 border-red-500/50'
+                        : 'bg-neutral-800/80 text-neutral-400 border-neutral-700 hover:text-white'
+                    }`}
+                  >
+                    {isAvoided ? `✕ ${avoid}` : `+ ${avoid}`}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Past History Sync Toggle */}
+          <div className="bg-neutral-850 p-2.5 rounded-xl border border-neutral-750 flex items-center justify-between">
+            <div>
+              <span className="text-xs font-bold text-white block">과거 운동 기록 AI 학습 연동</span>
+              <span className="text-[10px] text-neutral-400">최근 3회 운동 볼륨(18,450kg) 및 중량 데이터를 분석하여 점진적 과부하 반영</span>
+            </div>
+            <input
+              type="checkbox"
+              checked={syncPastHistory}
+              onChange={(e) => setSyncPastHistory(e.target.checked)}
+              className="w-4 h-4 accent-purple-500 cursor-pointer"
+            />
+          </div>
         </div>
 
         {/* Generate Button */}

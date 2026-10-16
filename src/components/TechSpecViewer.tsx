@@ -281,11 +281,19 @@ export async function requestWorkoutRoutine(userParams: {
           </div>
 
           <div className="bg-neutral-950 p-3.5 rounded-xl border border-neutral-800 space-y-2">
-            <h4 className="text-indigo-400 font-bold text-sm">6.3 커뮤니티 & 소셜 파트너 아키텍처</h4>
+            <h4 className="text-indigo-400 font-bold text-sm">6.3 커뮤니티, 챌린지 및 Q&A 아키텍처</h4>
             <p>
               - <strong>목표 달성 챌린지:</strong> 주 4회 출석, 2만kg 볼륨, 바디프로필 등 단체 미션 참여 및 진행률 트래킹.<br />
-              - <strong>실시간 리더보드:</strong> 주간 누적 볼륨 및 출석 일수 기반 랭킹과 상호 응원(Heart) 시스템.<br />
+              - <strong>오운완 피드 & Q&A 게시판:</strong> 사용자 간 질문(손목 통증, 식단 구성 등) 등록 및 공인 트레이너 검증 답변 뱃지 제공.<br />
               - <strong>헬스메이트 매칭:</strong> 운동 목표(근비대/다이어트), 선호 시간대(새벽/저녁), 활동 헬스장 거리 기반 매칭 스코어(Match Score) 산출 및 파트너 신청 인터랙션.
+            </p>
+          </div>
+
+          <div className="bg-neutral-950 p-3.5 rounded-xl border border-neutral-800 space-y-2">
+            <h4 className="text-teal-400 font-bold text-sm">6.4 비전 AI 멀티모달 식단 분석 (Vision AI Nutrition Pipeline)</h4>
+            <p>
+              - <strong>Gemini 2.5 Flash Vision Multimodal:</strong> 업로드된 음식 사진을 인라인 Base64로 전송하여 메뉴명, 1회 제공량 칼로리, 탄수화물·단백질·지방(g)을 정형화된 JSON Schema로 파싱.<br />
+              - <strong>목표별 실시간 영양 조언:</strong> 근비대(Hypertrophy) 유저에게는 근합성 글리코겐 보충 가이드를, 다이어트(Fat-loss) 유저에게는 포화지방 제한 및 식이섬유 보완 피드백을 실시간 제공.
             </p>
           </div>
         </div>

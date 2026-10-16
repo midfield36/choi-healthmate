@@ -22,6 +22,7 @@ export interface ExerciseDetail {
   videoUrl?: string;
   stepGuide?: ExerciseStepGuide[];
   commonMistakes?: string[];
+  muscleGroupSvg?: 'chest' | 'back' | 'legs' | 'shoulders' | 'arms';
 }
 
 export interface WorkoutRoutineResponse {
@@ -33,6 +34,7 @@ export interface WorkoutRoutineResponse {
   exercises: ExerciseDetail[];
   coolDown: string[];
   aiAdaptationNote?: string;
+  injurySafetyNote?: string;
 }
 
 export interface RoutineFeedback {
@@ -101,6 +103,7 @@ export interface ChallengeItem {
   myProgress: number; // e.g. 75%
   targetGoal: string;
   isJoined: boolean;
+  isVerifiedToday?: boolean;
 }
 
 export interface LeaderboardUser {
@@ -127,4 +130,35 @@ export interface WorkoutPartner {
   matchScore: number;
   status: 'online' | 'active_now' | 'offline';
   isRequested?: boolean;
+}
+
+// Community Q&A & Goal Share Posts
+export interface CommunityPost {
+  id: string;
+  authorName: string;
+  authorLevel: string;
+  authorAvatar: string;
+  category: '인증' | '질문' | '식단' | '팁';
+  title: string;
+  content: string;
+  workoutSummary?: string;
+  likesCount: number;
+  commentsCount: number;
+  createdAt: string;
+  isLiked?: boolean;
+  isTrainerAnswered?: boolean;
+}
+
+// Vision AI Diet & Nutrition Analysis types
+export interface DietMealAnalysis {
+  id: string;
+  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  dishName: string;
+  estimatedCalories: number;
+  proteinGrams: number;
+  carbsGrams: number;
+  fatGrams: number;
+  aiAdvice: string;
+  imageUrl?: string;
+  date: string;
 }
